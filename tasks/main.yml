@@ -1,0 +1,30 @@
+---
+- name: download Solr
+  command: bash -c "cd /root && wget http://www.eu.apache.org/dist/lucene/solr/4.7.2/solr-4.7.2.tgz" creates=/root/solr-4.7.2.tgz
+
+- name: unpack Solr
+  command: bash -c "cd /usr/share && tar xzf /root/solr-4.7.2.tgz" creates=/usr/share/solr-4.7.2
+
+- name: make a /usr/share/solr link
+  file: state=link src=/usr/share/solr-4.7.2 dest=/usr/share/solr
+
+- name: cp from webapps to multicore
+  command: bash -c "cp /usr/share/solr/example/webapps/solr.war /usr/share/solr/example/multicore/solr.war" creates=/usr/share/solr/example/multicore/solr.war
+
+- name: cp Solr libs to Tomcat lib dir
+  command: bash -c "cp -r /usr/share/solr/example/lib/ext/* /opt/tomcat7/lib/" creates=/opt/tomcat7/lib/slf4j-api-1.6.6.jar
+
+- name: make /var/log/solr
+  file: state=directory name=/var/log/solr owner=tomcat7 group=tomcat7 mode=0755
+
+- name: put log4j.properties
+  template: src=log4j.properties dest=/opt/tomcat7/lib/log4j.properties owner=root group=root mode=0644
+
+- name: put solr.xml
+  template: src=solr.xml dest=/opt/apache-tomcat-7.0.57/conf/Catalina/localhost/solr.xml owner=root group=tomcat7 mode=0640
+
+- name: put tomcat-users.xml
+  template: src=tomcat-users.xml dest=/opt/tomcat7/conf/tomcat-users.xml owner=root group=tomcat7 mode=0640
+
+- name: make /usr/share/solr/example/multicore readable to tomcat7 user
+  command: bash -c "chown -R tomcat7 /usr/share/solr/example/multicore"
